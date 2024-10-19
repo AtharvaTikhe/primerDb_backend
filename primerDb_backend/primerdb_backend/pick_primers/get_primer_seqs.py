@@ -1,11 +1,10 @@
-import logging
 import re
 import sys
 from collections import defaultdict
 import pandas as pd
 
 
-from primerDb_backend.primerdb_backend.backend_logger.logger import BackendLogger
+from primerDb_backend.primerdb_backend.utils.backend_logger import BackendLogger
 
 class GetPrimerDetails(BackendLogger):
     """
@@ -175,5 +174,5 @@ if __name__ == "__main__":
 
     import json
     test = json.loads(json_out.json)
-    # print(test)
+    print(test)
 
