@@ -69,14 +69,28 @@ class DbLookup:
             self.chr = key
             self.forward_primer_range = value['forward_primer']
             self.reverse_primer_range = value['reverse_primer']
+            self.prod_range = f"{value['prod_start']}-{value['prod_end']}"
 
         print(self.chr)
         print(self.forward_primer_range)
         print(self.reverse_primer_range)		
-
-        proc = subprocess.run(f"/MGMSTAR1/SHARED/RESOURCES/APPS/htslib-1.2.1/bin/tabix /MGMSTAR15/SHARED/RESOURCES/VariMAT/VariMAT_RESOURCES/VARIMAT2.5.2/GR38_RESOURCES/{self.chr}.MedVarDb.tsv.gz {self.chr}:{self.forward_primer_range}", shell = True)
+        
+        self.command_f = f"/MGMSTAR1/SHARED/RESOURCES/APPS/htslib-1.2.1/bin/tabix /MGMSTAR15/SHARED/RESOURCES/VariMAT/VariMAT_RESOURCES/VARIMAT2.5.2/GR38_RESOURCES/{self.chr}.MedVarDb.tsv.gz {self.chr}:{self.forward_primer_range}"
+	
+        self.command_r = f"/MGMSTAR1/SHARED/RESOURCES/APPS/htslib-1.2.1/bin/tabix /MGMSTAR15/SHARED/RESOURCES/VariMAT/VariMAT_RESOURCES/VARIMAT2.5.2/GR38_RESOURCES/{self.chr}.MedVarDb.tsv.gz {self.chr}:{self.reverse_primer_range}"
+        
+        self.command_p = f"/MGMSTAR1/SHARED/RESOURCES/APPS/htslib-1.2.1/bin/tabix /MGMSTAR15/SHARED/RESOURCES/VariMAT/VariMAT_RESOURCES/VARIMAT2.5.2/GR38_RESOURCES/{self.chr}.MedVarDb.tsv.gz {self.chr}:{self.prod_range}"
+		
+        self.run_tabix(self.command_f)
+        self.run_tabix(self.command_r)		
+#        self.run_tabix(self.command_p)		
+        print(self.command_r)
+    def run_tabix(self, command):
+        proc = subprocess.run(command, shell = True)
 
         print(proc.stdout)
+        print(proc.stderr)
+        print(proc.returncode)
 
 
 
