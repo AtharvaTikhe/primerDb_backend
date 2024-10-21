@@ -16,44 +16,47 @@ class UCSCScraper:
 
 
     def get_coords(self):
-        resp = requests.get(self.url)
+        try:
+            resp = requests.get(self.url)
 
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            table = soup.find_all('table')[0]
-            text = table.get_text()
-            matches = re.finditer(self.regex, text, re.MULTILINE)
+            if resp.status_code == 200:
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                table = soup.find_all('table')[0]
+                text = table.get_text()
+                matches = re.finditer(self.regex, text, re.MULTILINE)
 
-            coords_string = ""
-            for _, match in enumerate(matches, start=1):
-                coords_string = match.group()
+                coords_string = ""
+                for _, match in enumerate(matches, start=1):
+                    coords_string = match.group()
 
-            regex = r">(chr\w+):([1-9]+)\+([1-9]+)"
-            """ 
-            REGEX EXPLANATION
-            ^ asserts position at start of a line
-            > matches the character > with index 6210 (3E16 or 768) literally (case sensitive)
-            \\w matches any word character (equivalent to [a-zA-Z0-9_])
-            + matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
-            : matches the character : with index 5810 (3A16 or 728) literally (case sensitive)
-            \w matches any word character (equivalent to [a-zA-Z0-9_])
-            + matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
-            \+ matches the character + with index 4310 (2B16 or 538) literally (case sensitive)
-            \w matches any word character (equivalent to [a-zA-Z0-9_])
-            + matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
+                regex = r">(chr\w+):([1-9]+)\+([1-9]+)"
+                """ 
+                REGEX EXPLANATION
+                ^ asserts position at start of a line
+                > matches the character > with index 6210 (3E16 or 768) literally (case sensitive)
+                \\w matches any word character (equivalent to [a-zA-Z0-9_])
+                + matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
+                : matches the character : with index 5810 (3A16 or 728) literally (case sensitive)
+                \w matches any word character (equivalent to [a-zA-Z0-9_])
+                + matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
+                \+ matches the character + with index 4310 (2B16 or 538) literally (case sensitive)
+                \w matches any word character (equivalent to [a-zA-Z0-9_])
+                + matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
+    
+                """
 
-            """
+                matches = re.finditer(regex, coords_string, re.MULTILINE)
 
-            matches = re.finditer(regex, coords_string, re.MULTILINE)
-
-            groups = [[group for group in match.groups()] for _, match in enumerate(matches)]
-            groups = groups[0]
-            export_dict = {
-                groups[0]: {"prod_start": groups[1], "prod_end": groups[2], "forward_primer": f"{groups[1]}-{int(groups[1]) + len(self.forward)}", "reverse_primer": f"{int(groups[2])-len(self.reverse)}-{groups[2]}"}}
-            return export_dict
-        else:
-            raise ConnectionError
-
+                groups = [[group for group in match.groups()] for _, match in enumerate(matches)]
+                groups = groups[0]
+                export_dict = {
+                    groups[0]: {"prod_start": groups[1], "prod_end": groups[2], "forward_primer": f"{groups[1]}-{int(groups[1]) + len(self.forward)}", "reverse_primer": f"{int(groups[2])-len(self.reverse)}-{groups[2]}"}}
+                return export_dict
+            else:
+                raise ConnectionError
+        except ConnectionError as e:
+            print(e)
+            # pass
 
 
 
