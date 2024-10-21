@@ -3,20 +3,6 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import re
 
-""" 
-REGEX EXPLANATION
-^ asserts position at start of a line
-> matches the character > with index 6210 (3E16 or 768) literally (case sensitive)
-\w matches any word character (equivalent to [a-zA-Z0-9_])
-+ matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
-: matches the character : with index 5810 (3A16 or 728) literally (case sensitive)
-\w matches any word character (equivalent to [a-zA-Z0-9_])
-+ matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
-\+ matches the character + with index 4310 (2B16 or 538) literally (case sensitive)
-\w matches any word character (equivalent to [a-zA-Z0-9_])
-+ matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
-
-"""
 
 
 class UCSCScraper:
@@ -43,6 +29,20 @@ class UCSCScraper:
                 coords_string = match.group()
 
             regex = r">(chr\w+):([1-9]+)\+([1-9]+)"
+            """ 
+            REGEX EXPLANATION
+            ^ asserts position at start of a line
+            > matches the character > with index 6210 (3E16 or 768) literally (case sensitive)
+            \\w matches any word character (equivalent to [a-zA-Z0-9_])
+            + matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
+            : matches the character : with index 5810 (3A16 or 728) literally (case sensitive)
+            \w matches any word character (equivalent to [a-zA-Z0-9_])
+            + matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
+            \+ matches the character + with index 4310 (2B16 or 538) literally (case sensitive)
+            \w matches any word character (equivalent to [a-zA-Z0-9_])
+            + matches the previous token between one and unlimited times, as many times as possible, giving back as needed (greedy)
+
+            """
 
             matches = re.finditer(regex, coords_string, re.MULTILINE)
 
@@ -55,9 +55,6 @@ class UCSCScraper:
             raise ConnectionError
 
 
-obj = UCSCScraper('CAMK2','CAGCAGCAGAAGCACACTCAAG','GCAGAAGGAGACAGGTGACCAG')
-
-print(obj.get_coords())
 
 
 
