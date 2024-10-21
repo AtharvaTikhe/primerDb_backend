@@ -1,8 +1,8 @@
 import requests
+import subprocess
 from bs4 import BeautifulSoup
 import pandas as pd
 import re
-
 
 
 class UCSCScraper:
@@ -62,4 +62,27 @@ class UCSCScraper:
 
 
 
+class DbLookup:
+    def __init__(self, positions: dict):
 
+        for key, value in positions.items():
+            self.chr = key
+            self.forward_primer_range = value['forward_primer']
+            self.reverse_primer_range = value['reverse_primer']
+
+        print(self.chr)
+        print(self.forward_primer_range)
+        print(self.reverse_primer_range)		
+
+        proc = subprocess.run(f"/MGMSTAR1/SHARED/RESOURCES/APPS/htslib-1.2.1/bin/tabix /MGMSTAR15/SHARED/RESOURCES/VariMAT/VariMAT_RESOURCES/VARIMAT2.5.2/GR38_RESOURCES/{self.chr}.MedVarDb.tsv.gz {self.chr}:{self.forward_primer_range}", shell = True)
+
+        print(proc.stdout)
+
+
+
+obj = UCSCScraper('CAMK2','CAGCAGCAGAAGCACACTCAAG','GCAGAAGGAGACAGGTGACCAG')
+
+
+db_obj = DbLookup(obj.get_coords())
+
+print(obj.get_coords())
