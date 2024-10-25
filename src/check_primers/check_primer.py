@@ -12,10 +12,21 @@ from src.check_primers import cache_path, output_path
 
 class CheckPrimer:
 
-    def __init__(self, seq_id, forward, reverse):
+    def __init__(self, seq_id, forward, reverse, p_size_min = 15, p_size_opt = 21, p_size_max = 26, p_temp_min = 45, p_temp_opt = 55, p_temp_max = 75, p_gc_min = 40, p_gc_opt = 47, p_gc_max = 60, p_prod_size = '27401-27475 30-300 301-400 401-500 501-600 601-700 701-850 851-1000'   ):
         self.seq_id = seq_id
         self.fw = forward
         self.rv = reverse
+        self.p_size_min = p_size_min
+        self.p_size_opt = p_size_opt
+        self.p_size_max = p_size_max
+        self.p_temp_min = p_temp_min
+        self.p_temp_opt = p_temp_opt
+        self.p_temp_max = p_temp_max
+        self.p_gc_min = p_gc_min
+        self.p_gc_opt = p_gc_opt
+        self.p_gc_max = p_gc_max
+        self.p_prod_size = p_prod_size.strip()
+
         self.template = 'template.txt'
         self.out = f'{cache_path}/{self.seq_id}.input.txt'
         self.logger = BackendLogger()
@@ -24,8 +35,22 @@ class CheckPrimer:
 
 
     def __get_seq_data(self):
-        return [f'SEQUENCE_ID={self.seq_id}\n', f'SEQUENCE_PRIMER={self.fw}\n', f'SEQUENCE_PRIMER_REVCOMP={self.rv}\n', 'P3_FILE_FLAG=1\n']
+        return [f"SEQUENCE_ID={self.seq_id}\n",
+                f"SEQUENCE_PRIMER={self.fw}\n",
+                f"SEQUENCE_PRIMER_REVCOMP={self.rv}\n",
+                "P3_FILE_FLAG=1\n",
+                f"PRIMER_MIN_SIZE={self.p_size_min}\n",
+                f"PRIMER_OPT_SIZE={self.p_size_opt}\n",
+                f"PRIMER_MAX_SIZE={self.p_size_opt}\n",
+                f"PRIMER_MIN_TM={self.p_temp_min}\n",
+                f"PRIMER_OPT_TM={self.p_temp_opt}\n",
+                f"PRIMER_MAX_TM={self.p_temp_max}\n",
+                f"PRIMER_MIN_GC={self.p_gc_min}\n",
+                f"PRIMER_OPT_GC_PERCENT={self.p_gc_opt}\n",
+                f"PRIMER_MAX_GC={self.p_gc_max}\n",
+                f"PRIMER_PRODUCT_SIZE_RANGE={self.p_prod_size}\n"]
 
+        # return [f'SEQUENCE_ID={self.seq_id}\n', f'SEQUENCE_PRIMER={self.fw}\n', f'SEQUENCE_PRIMER_REVCOMP={self.rv}\n', 'P3_FILE_FLAG=1\n', '']
 
     def generate_input(self):
         # Check cache if file exists
@@ -55,10 +80,14 @@ class CheckPrimer:
                 f.writelines(proc.stdout)
                 f.close()
 
-            os.rename(f"{self.seq_id}.for", f"{output_path}/{self.seq_id}.for")
-            os.rename(f"{self.seq_id}.rev", f"{output_path}/{self.seq_id}.rev")
-            self._for_rev_files.append(open(f'{output_path}/{self.seq_id}.for', 'r'))
-            self._for_rev_files.append(open(f'{output_path}/{self.seq_id}.rev', 'r'))
+            if os.path.exists(f"{self.seq_id}.for") and os.path.exists(f"{self.seq_id}.rev"):
+                os.rename(f"{self.seq_id}.for", f"{output_path}/{self.seq_id}.for")
+                os.rename(f"{self.seq_id}.rev", f"{output_path}/{self.seq_id}.rev")
+                self._for_rev_files.append(open(f'{output_path}/{self.seq_id}.for', 'r'))
+                self._for_rev_files.append(open(f'{output_path}/{self.seq_id}.rev', 'r'))
+            else:
+                self.logger.general_log(f"NO PRIMERS FOUND! {self.seq_id}")
+                os.remove(self.out)
 
         except CalledProcessError as e:
             self.logger.general_log(f"ERROR RUNNING PRIMER3 : {e}")
@@ -118,3 +147,8 @@ out = obj.run_primer3()
 `out` is a json string
 
 """
+
+if __name__ == "__main__":
+    obj = CheckPrimer("TEST1", "CACACGTTCTTGCAGCCTG", "TCCTGTGTTGTGTGCATTCG")
+    out = obj.run_primer3()
+    print(out)
