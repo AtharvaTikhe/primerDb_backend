@@ -4,5 +4,5 @@
 
 # local
 tabix_bin = "/home/atharvatikhe/miniconda3/envs/primerDesign/bin/tabix"
-db_root = "/home/atharvatikhe/primer_design/primerDB_backend/src/db_lookup/subsample"
+db_root = "/home/atharvatikhe/primer_design/primerDB_app/src/db_lookup/subsample"
 
