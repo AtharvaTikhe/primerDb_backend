@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Title</title>
+    </head>
+    <body>
+        <!-- <form action="/pick_primers" method="post"> -->
+        <form>
+            <label for="seq_id">Sequence ID</label>
+            <input type="text" name="seq_id" id="seq_id" required>
+
+            <label for="chr">Chr</label>
+            <input type="text" name="chr" id="chr">
+
+            <label for="coords">Co-ordinates</label>
+            <input type="text" name="coords" id="coords">
+
+            <label for="flanks">flanks</label>
+            <input type="text" name="flanks" id="flanks">
+
+            <label for="num_ret">Num to return</label>
+            <input type="text" name="num_ret" id="num_ret">
+
+            <label for="seq_target"></label>
+            <input type="text" name="seq_target" id="seq_target">
+
+            <button type="submit" id="submit">Submit</button>
+
+        </form>
+        <script>
+
+    const btn = document.getElementById('submit');
+    
+    function makeRes(response) {
+        console.log(`Received : ${response[0]['left_primer']}`);
+        
+        const p = document.createElement('p')
+        p.textContent = `${response[0]['left_primer']}`
+        document.body.appendChild(p)
+    }
+
+
+
+    btn.addEventListener('click', (event) => {
+        event.preventDefault()
+        
+        const form = document.querySelector("form")
+        const formData = new FormData(form)
+        
+        const resp = getData(formData);
+        
+
+
+        // resp.then((value) => {
+        //     makeRes(value)
+        // }).catch((err) => {
+        //     alert(err)
+        // })
+        
+
+    })
+
+
+    async function getData(uploadData) {
+
+        const url = "/pick_primers"
+          try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: uploadData
+
+            });
+            if (!response.ok) {
+                throw new Error(`Response status: ${response.status}`);
+            }
+
+            const json = await response.json();
+            makeRes(json)
+            // console.log(json);
+            return json;
+        } catch (error) {
+            console.error(error.message);
+    }
+
+
+    }
+
+</script>
+    </body>
+</html>
