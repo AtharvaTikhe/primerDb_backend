@@ -13,9 +13,9 @@ def send_pick_primers():
     flanks = request.form['flanks']
     num_ret = request.form['num_ret']
     seq_target = request.form['seq_target']
+
     obj = GenerateP3Input(Chr, coords, flanks, seq_id, seq_target, num_ret)
     primer_pairs, full_output = obj.run_primer3()
-    print(primer_pairs)
     return jsonify(primer_pairs)
 
 
