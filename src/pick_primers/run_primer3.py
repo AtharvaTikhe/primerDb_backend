@@ -1,3 +1,4 @@
+from collections import defaultdict
 import json
 import os.path
 import subprocess
@@ -75,10 +76,28 @@ class GenerateP3Input:
                 # parse entire output and store as JSON
                 parsed_out = P3outputParser(f"{self.p3_output}")
 
-                with open(f"{output_path}/{self.seq_id}_p3_out.json", 'w') as f:
+                with open(f"{output_path}/{self.seq_id}_p3_out.json", 'w', encoding='utf-8') as f:
                     json.dump(json.loads(parsed_out.parse_file()), f, ensure_ascii=False, indent=4)
 
-                return json.loads(primer_seq.json), json.loads(parsed_out.parse_file())
+                full_output = json.loads(parsed_out.parse_file())
+                primer_pairs = json.loads(primer_seq.json)
+
+                main = defaultdict(dict)
+                for kv_pair in full_output:
+                    for i in range(0, int(self.num_ret)):
+                        if f"PRIMER_LEFT_{i}_TM" in kv_pair.keys():
+                            main[str(i)].update(kv_pair)
+                        if f"PRIMER_RIGHT_{i}_TM" in kv_pair.keys():
+                            main[str(i)].update(kv_pair)
+                        if f"PRIMER_LEFT_{i}_GC_PERCENT" in kv_pair.keys():
+                            main[str(i)].update(kv_pair)
+                        if f"PRIMER_RIGHT_{i}_GC_PERCENT" in kv_pair.keys():
+                            main[str(i)].update(kv_pair)
+
+                for key in primer_pairs.keys():
+                    primer_pairs[key].update(main[key])
+
+                return primer_pairs, full_output
                 # print(json.loads(primer_seq.json))
         except CalledProcessError:
             self.logger.general_log(f'primer3 failed for {self.p3_input_file}')
