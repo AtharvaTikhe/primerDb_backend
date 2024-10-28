@@ -4,10 +4,24 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Title</title>
+        <link rel="stylesheet" href="../static/styles.css">
+        <!-- <link rel="stylesheet" href="../static/Datatables/datatables.css"> -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+            crossorigin="anonymous">
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"
+            defer></script>
+        <script src="../static/Datatables/datatables.js" defer></script>
+        <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+
     </head>
     <body>
-        <!-- <form action="/pick_primers" method="post"> -->
-        <form>
+        <form id="form">
             <label for="seq_id">Sequence ID</label>
             <input type="text" name="seq_id" id="seq_id" required>
 
@@ -29,16 +43,106 @@
             <button type="submit" id="submit">Submit</button>
 
         </form>
+        <table class="hidden" id="input_display">
+            <thead>
+                <tr>
+                    <th>
+                        Primer Pair
+                    </th>
+                    <th>
+                        Primer Sequence
+                    </th>
+
+                    <th>
+                        Tm
+                    </th>
+                    <th>
+                        %GC
+                    </th>
+                    <th>
+                        Start Position
+                    </th>
+                    <th>
+                        End Position
+                    </th>
+                    <th>
+                        Detected SNVs
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="primer_table">
+            </tbody>
+        </table>
+
         <script>
 
     const btn = document.getElementById('submit');
     
     function makeRes(response) {
-        console.log(`Received : ${response[0]['left_primer']}`);
-        
-        const p = document.createElement('p')
-        p.textContent = `${response[0]['left_primer']}`
-        document.body.appendChild(p)
+        const resp = response;
+        console.log(resp);
+
+        const inputTable = document.querySelector("#primer_table");
+        // new DataTable('#input_display')
+
+        const mainTable = document.querySelector("#input_display")
+        mainTable.classList.remove('hidden');
+
+        btn.disabled = true;
+
+        for (const key in response ){
+            const row = document.createElement('tr')
+            const pp = document.createElement('td')
+            pp.textContent = key
+            pp.setAttribute('rowspan', 2)
+            row.appendChild(pp)
+
+            const fp = document.createElement('td')
+            fp.textContent = `FP - ${response[key]['left_primer']}`
+            row.appendChild(fp)
+
+            const f_tm = document.createElement('td')
+            f_tm.textContent = `${response[key][`PRIMER_LEFT_${key}_TM`]}`
+            row.appendChild(f_tm)
+
+            const f_gc = document.createElement('td')
+            f_gc.textContent = `${response[key][`PRIMER_LEFT_${key}_GC_PERCENT`]}%`
+            row.appendChild(f_gc)
+
+            const f_start = document.createElement('td')
+            f_start.textContent = `${response[key]['left_pos']['start']}`
+            row.append(f_start)
+
+            const f_end = document.createElement('td')
+            f_end.textContent = `${response[key]['left_pos']['end']}`
+            row.append(f_end)
+
+
+            const rp_row = document.createElement('tr')
+            const rp = document.createElement('td')
+            rp.textContent = `RP - ${response[key]['right_primer']}`
+            rp_row.appendChild(rp)
+            
+            const r_tm = document.createElement('td')
+            r_tm.textContent = `${response[key][`PRIMER_RIGHT_${key}_TM`]}`
+            rp_row.appendChild(r_tm)
+
+            const r_gc = document.createElement('td')
+            r_gc.textContent = `${response[key][`PRIMER_RIGHT_${key}_GC_PERCENT`]}%`
+            rp_row.appendChild(r_gc)
+
+            const r_start = document.createElement('td')
+            r_start.textContent = `${response[key]['right_pos']['start']}`
+            rp_row.appendChild(r_start)
+
+            const r_end = document.createElement('td')
+            r_end.textContent = `${response[key]['right_pos']['end']}`
+            rp_row.appendChild(r_end)
+
+
+            inputTable.appendChild(row)
+            inputTable.appendChild(rp_row)            
+        }
     }
 
 
@@ -51,15 +155,6 @@
         
         const resp = getData(formData);
         
-
-
-        // resp.then((value) => {
-        //     makeRes(value)
-        // }).catch((err) => {
-        //     alert(err)
-        // })
-        
-
     })
 
 
@@ -78,14 +173,13 @@
 
             const json = await response.json();
             makeRes(json)
-            // console.log(json);
+        
             return json;
         } catch (error) {
-            console.error(error.message);
+            console.log(error)
+            console.log(error.message);
     }
-
-
-    }
+}
 
 </script>
     </body>
