@@ -7,8 +7,8 @@ from subprocess import CalledProcessError
 
 from src.utils.backend_logger.logger import BackendLogger
 from src.utils.primer3_parser.primer3_output_parser import P3outputParser
+from src.utils.config_parser.config_parser import parse_config
 
-from src.check_primers import cache_path, output_path
 
 class CheckPrimer:
 
@@ -27,10 +27,18 @@ class CheckPrimer:
         self.p_gc_max = p_gc_max
         self.p_prod_size = p_prod_size.strip()
 
-        self.template = 'template.txt'
-        self.out = f'{cache_path}/{self.seq_id}.input.txt'
+        self.template = 'src/check_primers/template.txt'
+
+        config = parse_config('Check_primers')
+
+        self.cache_path = config['cache_path']
+        self.primer3_bin = config['primer3_bin']
+        self.output_path = config['output_path']
+
+        self.out = f'{self.cache_path}/{self.seq_id}.input.txt'
         self.logger = BackendLogger()
-        self.primer3_bin = "/home/atharvatikhe/primer_design/primer3-2.6.1/src/primer3_core"
+
+        
         self._for_rev_files = []
 
 
@@ -76,15 +84,15 @@ class CheckPrimer:
             elif proc.returncode == 0:
                 self.logger.general_log(f"primer3 ran successfully for {self.out}")
 
-            with open(f'{output_path}/{self.seq_id}.out.txt', 'w') as f:
+            with open(f'{self.output_path}/{self.seq_id}.out.txt', 'w') as f:
                 f.writelines(proc.stdout)
                 f.close()
 
             if os.path.exists(f"{self.seq_id}.for") and os.path.exists(f"{self.seq_id}.rev"):
-                os.rename(f"{self.seq_id}.for", f"{output_path}/{self.seq_id}.for")
-                os.rename(f"{self.seq_id}.rev", f"{output_path}/{self.seq_id}.rev")
-                self._for_rev_files.append(open(f'{output_path}/{self.seq_id}.for', 'r'))
-                self._for_rev_files.append(open(f'{output_path}/{self.seq_id}.rev', 'r'))
+                os.rename(f"{self.seq_id}.for", f"{self.output_path}/{self.seq_id}.for")
+                os.rename(f"{self.seq_id}.rev", f"{self.output_path}/{self.seq_id}.rev")
+                self._for_rev_files.append(open(f'{self.output_path}/{self.seq_id}.for', 'r'))
+                self._for_rev_files.append(open(f'{self.output_path}/{self.seq_id}.rev', 'r'))
             else:
                 self.logger.general_log(f"NO PRIMERS FOUND! {self.seq_id}")
                 os.remove(self.out)
@@ -129,9 +137,9 @@ class CheckPrimer:
             export_dict['reverse']['hairpin'] = groups[9]
             export_dict['reverse']['quality'] = groups[10]
 
-        p3_out = P3outputParser(f'{output_path}/{self.seq_id}.out.txt')
+        p3_out = P3outputParser(f'{self.output_path}/{self.seq_id}.out.txt')
 
-        with open(f'{output_path}/{self.seq_id}.json', 'w', encoding='utf-8') as f:
+        with open(f'{self.output_path}/{self.seq_id}.json', 'w', encoding='utf-8') as f:
             json.dump(json.loads(p3_out.parse_file()), f, ensure_ascii=False, indent=4)
             f.close()
 

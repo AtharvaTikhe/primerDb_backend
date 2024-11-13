@@ -2,10 +2,10 @@ import json
 import subprocess
 from subprocess import SubprocessError
 
-from src.db_lookup import db_root, tabix_bin
 # from src.db_lookup.ucsc_scraper import UCSCScraper
 # from src.pick_primers.run_primer3 import GenerateP3Input
 from src.db_lookup.parse_tabix_output import ParseResults
+from src.utils.config_parser.config_parser import parse_config
 
 
 def run_tabix(db_dict, id):
@@ -26,6 +26,10 @@ def run_tabix(db_dict, id):
 class DbLookup:
 
     def __init__(self, positions: dict, id):
+        config = parse_config('Db_lookup')
+        self.tabix_bin = config['tabix_bin']
+        self.db_root = config['db_root']
+
         self.id = id
         for key, value in positions.items():
             self.chr = key
@@ -39,10 +43,10 @@ class DbLookup:
         }
 
         # define database paths
-        self.medvar_db = f"{db_root}/{self.chr}.MedVarDb.tsv.gz"
-        self.crdb = f"{db_root}/CRDB.{self.chr}.bed.gz"
-        self.thousand_genomes = f"{db_root}/{self.chr}.1000G.tsv.gz"
-        self.gnomad = f"{db_root}/gnomad/{self.chr}.gnomad.gr38.vcf.gz"
+        self.medvar_db = f"{self.db_root}/{self.chr}.MedVarDb.tsv.gz"
+        self.crdb = f"{self.db_root}/CRDB.{self.chr}.bed.gz"
+        self.thousand_genomes = f"{self.db_root}/{self.chr}.1000G.tsv.gz"
+        self.gnomad = f"{self.db_root}/gnomad/{self.chr}.gnomad.gr38.vcf.gz"
 
         self.results = run_tabix(self.command_generator(), self.id)
 
@@ -85,7 +89,7 @@ class DbLookup:
             self.pre_db_result[self.id][db_name] = {}
 
             for primer_name, primer_range in self.primer_pair.items():
-                temp_command.append(f"{tabix_bin} {db_cmd} {self.chr}:{primer_range}")
+                temp_command.append(f"{self.tabix_bin} {db_cmd} {self.chr}:{primer_range}")
                 self.pre_db_result[self.id][db_name][primer_name] = primer_range
             self.pre_db_result[self.id][db_name]["cmd"] = temp_command
 

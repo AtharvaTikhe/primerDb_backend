@@ -1,9 +1,10 @@
 import os
 import json
 import requests
-
 from src.pick_primers import cache_path, output_path
 from src.utils.backend_logger.logger import BackendLogger
+from src.utils.config_parser.config_parser import parse_config
+
 
 class GetSequence:
     def __init__(self, chr, coord, flanks):
@@ -12,10 +13,9 @@ class GetSequence:
         self.flanks = int(flanks)
         self.lcoord = self.coord - self.flanks
         self.rcoord = self.coord + self.flanks
-
+        self.cache_path = parse_config('Pick_primers')['cache_path']
         self.logger = BackendLogger()
-
-        self.seq_filename = f"{cache_path}/{self.chr}_{self.coord}.txt"
+        self.seq_filename = f"{self.cache_path}/{self.chr}_{self.coord}.txt"
         # self.get_seq_from_api()
 
     def get_seq_from_api(self):

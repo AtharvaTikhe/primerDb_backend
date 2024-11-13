@@ -8,15 +8,24 @@ from src.db_lookup.tabix_based_lookup import DbLookup
 from src.db_lookup.ucsc_scraper import UCSCScraper
 from src.utils.primer3_parser.primer3_output_parser import P3outputParser
 from src.utils.backend_logger.logger import BackendLogger
+from src.utils.config_parser.config_parser import parse_config
 
-from src.pick_primers import primer3_bin, cache_path, output_path, primer3_settings
+# from src.pick_primers import primer3_bin, self.cache_path, self.output_path, primer3_settings
 from src.pick_primers.get_primer_seqs import GetPrimerDetails
 from src.pick_primers.get_sequence import GetSequence
 
 
 
+
 class GenerateP3Input:
     def __init__(self, chr, coord, flanks, seq_id, target, num_ret):
+        config = parse_config('Pick_primers')
+        
+        self.primer3_bin = config['primer3_bin']
+        self.cache_path = config['cache_path']
+        self.output_path = config['output_path']
+        self.primer3_settings = config['primer3_settings']
+
         self.seq_id = seq_id
 
         if len(target.split(',')) == 2:
@@ -30,8 +39,8 @@ class GenerateP3Input:
         seq = GetSequence(chr, coord, flanks)
         self.seq = json.loads(seq.get_seq_from_api())['dna'].strip()
 
-        self.p3_input_file = f"{cache_path}/{self.seq_id}.{self.num_ret}.input.txt"
-        self.p3_output = f"{output_path}/{self.seq_id}_{self.num_ret}_out.txt"
+        self.p3_input_file = f"{self.cache_path}/{self.seq_id}.{self.num_ret}.input.txt"
+        self.p3_output = f"{self.output_path}/{self.seq_id}_{self.num_ret}_out.txt"
         self.logger = BackendLogger()
 
 
@@ -60,10 +69,10 @@ class GenerateP3Input:
 
     def run_primer3(self):
         self.generate_input()
-        self.logger.general_log(f"Using primer3 bin : {primer3_bin}")
+        self.logger.general_log(f"Using primer3 bin : {self.primer3_bin}")
         try:
 
-            proc = subprocess.run([f'{primer3_bin} --p3_settings_file="{primer3_settings}" --output={self.p3_output} --error="{cache_path}/{self.seq_id}_err.txt" {self.p3_input_file} '], shell=True, capture_output=True, text=True)
+            proc = subprocess.run([f'{self.primer3_bin} --p3_settings_file="{self.primer3_settings}" --output={self.p3_output} --error="{self.cache_path}/{self.seq_id}_err.txt" {self.p3_input_file} '], shell=True, capture_output=True, text=True)
 
             if proc.stderr != '' or proc.returncode != 0:
                 self.logger.general_log(f"primer3 returned {proc.returncode} : {proc.stderr}")
@@ -76,7 +85,7 @@ class GenerateP3Input:
                 # parse entire output and store as JSON
                 parsed_out = P3outputParser(f"{self.p3_output}")
 
-                with open(f"{output_path}/{self.seq_id}_p3_out.json", 'w', encoding='utf-8') as f:
+                with open(f"{self.output_path}/{self.seq_id}_p3_out.json", 'w', encoding='utf-8') as f:
                     json.dump(json.loads(parsed_out.parse_file()), f, ensure_ascii=False, indent=4)
 
                 full_output = json.loads(parsed_out.parse_file())
