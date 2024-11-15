@@ -5,6 +5,8 @@ import subprocess
 from collections import defaultdict
 from subprocess import CalledProcessError
 
+from src.db_lookup.tabix_based_lookup import DbLookup
+from src.db_lookup.ucsc_scraper import UCSCScraper
 from src.utils.backend_logger.logger import BackendLogger
 from src.utils.primer3_parser.primer3_output_parser import P3outputParser
 from src.utils.config_parser.config_parser import parse_config
@@ -142,6 +144,11 @@ class CheckPrimer:
         with open(f'{self.output_path}/{self.seq_id}.json', 'w', encoding='utf-8') as f:
             json.dump(json.loads(p3_out.parse_file()), f, ensure_ascii=False, indent=4)
             f.close()
+
+
+        obj = UCSCScraper(self.seq_id, export_dict['forward']['seq'], export_dict['reverse']['seq'])
+        db_obj = DbLookup(obj.get_coords(), self.seq_id)
+        export_dict.update(db_obj.results[self.seq_id])
 
         return json.dumps(export_dict)
 

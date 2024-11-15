@@ -4,6 +4,7 @@ import os.path
 import subprocess
 from subprocess import CalledProcessError
 
+
 from src.db_lookup.tabix_based_lookup import DbLookup
 from src.db_lookup.ucsc_scraper import UCSCScraper
 from src.utils.primer3_parser.primer3_output_parser import P3outputParser
@@ -37,7 +38,11 @@ class GenerateP3Input:
         self.num_ret = num_ret
 
         seq = GetSequence(chr, coord, flanks)
-        self.seq = json.loads(seq.get_seq_from_api())['dna'].strip()
+        sequence = seq.get_seq_from_api()
+        if sequence is not None:
+            self.seq = json.loads(sequence)['dna'].strip()
+        else:
+            raise Exception('No Sequence found for given co-ordinates and flanks')
 
         self.p3_input_file = f"{self.cache_path}/{self.seq_id}.{self.num_ret}.input.txt"
         self.p3_output = f"{self.output_path}/{self.seq_id}_{self.num_ret}_out.txt"
@@ -105,6 +110,11 @@ class GenerateP3Input:
 
                 for key in primer_pairs.keys():
                     primer_pairs[key].update(main[key])
+
+                for key in primer_pairs.keys():
+                    obj = UCSCScraper(self.seq_id, primer_pairs[key]['left_primer'], primer_pairs[key]['right_primer'])
+                    db_obj = DbLookup(obj.get_coords(), self.seq_id)
+                    primer_pairs[key].update(db_obj.results[self.seq_id])
 
                 return primer_pairs, full_output
                 # print(json.loads(primer_seq.json))
