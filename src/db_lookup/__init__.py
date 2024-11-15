@@ -3,6 +3,6 @@
 # db_root = "/MGMSTAR15/SHARED/RESOURCES/VariMAT/VariMAT_RESOURCES/VARIMAT2.5.2/GR38_RESOURCES/"
 
 # local
-tabix_bin = "/home/atharvatikhe/miniconda3/envs/primerDesign/bin/tabix"
-db_root = "/home/atharvatikhe/primer_design/primerDB_app/src/db_lookup/subsample"
+# tabix_bin = "/home/atharvatikhe/miniconda3/envs/primerDesign/bin/tabix"
+# db_root = "/home/atharvatikhe/primer_design/primerDB_app/src/db_lookup/subsample"
 
