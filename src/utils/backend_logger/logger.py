@@ -3,15 +3,17 @@ import logging
 import os
 from datetime import datetime
 
-from src.utils.backend_logger import log_path
-
+# from src.utils.backend_logger import log_path
+from src.utils.config_parser.config_parser import parse_config
 
 class BackendLogger:
     def __init__(self):
         caller_frame = inspect.getouterframes(inspect.currentframe())[1]
         time_format = datetime.now().strftime("%Y_%m_%d_%H_%M")
-        self.log_file_path = f"{log_path}/{caller_frame.filename.split('/')[-1]}_{time_format}.log"
-        # self.log_file_path = f"{log_path}/{os.path.dirname(caller_frame.filename)}/{caller_frame.filename.split('/')[-1]}_{time_format}.log"
+        self.log_path = parse_config('Log_path').get('log_path')
+
+        self.log_file_path = f"{self.log_path}/{caller_frame.filename.split('/')[-1]}_{time_format}.log"
+        # self.log_file_path = f"{self.log_path}/{os.path.dirname(caller_frame.filename)}/{caller_frame.filename.split('/')[-1]}_{time_format}.log"
 
     def general_log(self, message):
         caller_frame = inspect.getouterframes(inspect.currentframe())[1]

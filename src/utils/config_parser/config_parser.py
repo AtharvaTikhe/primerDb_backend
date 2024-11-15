@@ -12,7 +12,7 @@ def parse_config(category):
         if category == 'Db_lookup':
             config_values['tabix_bin'] = config.get(category, 'tabix_bin')
             config_values['db_root'] = config.get(category, 'db_root')
-        if category == 'logger':
+        if category == 'Log_path':
             config_values['log_path'] = config.get(category, 'log_path')
         if category == 'Check_primers':
             config_values['cache_path'] = config.get(category, 'cache_path')
