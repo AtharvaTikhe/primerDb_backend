@@ -122,9 +122,13 @@ class GetPrimerDetails(BackendLogger):
             temp_left_primer = {'left': {"start": pos_tuple_holder[i][1].split(',')[0],
                                          'end': int(pos_tuple_holder[i][1].split(',')[0]) + int(pos_tuple_holder[i][1].split(',')[1])}}
 
-            temp_right_primer = {'right': {"start": pos_tuple_holder[i + 1][1].split(',')[0],
-                                           'end': int(pos_tuple_holder[i + 1][1].split(',')[0]) + int(
-                                               pos_tuple_holder[i + 1][1].split(',')[1])}}
+            # temp_right_primer = {'right': {"start": pos_tuple_holder[i + 1][1].split(',')[0],
+            #                                'end': int(pos_tuple_holder[i + 1][1].split(',')[0]) + int(
+            #                                    pos_tuple_holder[i + 1][1].split(',')[1])}}
+
+            temp_right_primer = {'right': {"start":int(pos_tuple_holder[i + 1][1].split(',')[0]) - int(
+                                               pos_tuple_holder[i + 1][1].split(',')[1]),
+                                           "end":pos_tuple_holder[i + 1][1].split(',')[0]}}
 
             temp_left_primer.update(temp_right_primer)
 
@@ -151,12 +155,14 @@ class GetPrimerDetails(BackendLogger):
 
         seq_df = seq_df.T
         pos_df = pos_df.T
+        try:
+            merge = pd.concat([pos_df, seq_df], axis=1)
 
-        merge = pd.concat([pos_df, seq_df], axis=1)
-
-        merge.columns = ['left_pos', 'right_pos', 'left_primer', 'right_primer']
-        merge = merge.T
-        super().general_log(f"Merging complete: {merge}")
+            merge.columns = ['left_pos', 'right_pos', 'left_primer', 'right_primer']
+            merge = merge.T
+            super().general_log(f"Merging complete: {merge}")
+        except ValueError:
+            merge = {'status': 'No primers found'}
         if write_json is True:
             merge.to_json(f"{self.p3_file.split('.')[0]}_primers.json")
         return merge.to_json()
