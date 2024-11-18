@@ -13,7 +13,7 @@ class BackendLogger:
         time_format = datetime.now().strftime("%Y_%m_%d_%H")
         self.log_path = parse_config('Log_path').get('log_path')
 
-        self.log_file_path = f"{self.log_path}/{time_format}.log"
+        self.log_file_path = f"{self.log_path}/backend_run_log.log"
         # self.log_file_path = f"{self.log_path}/{os.path.dirname(caller_frame.filename)}/{caller_frame.filename.split('/')[-1]}_{time_format}.log"
 
     def general_log(self, message):
@@ -25,7 +25,7 @@ class BackendLogger:
 
 
         file_handler = RotatingFileHandler(self.log_file_path)
-        file_handler = RotatingFileHandler(self.log_file_path, maxBytes=20000, backupCount= 10 )
+        file_handler = RotatingFileHandler(self.log_file_path, maxBytes=20000, backupCount= 5 )
 
         file_handler.setFormatter(logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s'))
         logger.addHandler(file_handler)

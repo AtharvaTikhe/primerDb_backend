@@ -15,7 +15,7 @@ from src.utils.config_parser.config_parser import parse_config
 from src.pick_primers.get_primer_seqs import GetPrimerDetails
 from src.pick_primers.get_sequence import GetSequence
 
-from src.utils.unique_ids.create_uuid import create_uuid
+
 
 
 class GenerateP3Input:
@@ -27,7 +27,7 @@ class GenerateP3Input:
         self.output_path = config['output_path']
         self.primer3_settings = config['primer3_settings']
 
-        self.seq_id = create_uuid(seq_id)
+        self.seq_id = seq_id
 
         if len(target.split(',')) == 2:
             self.target = target

@@ -11,12 +11,11 @@ from src.utils.backend_logger.logger import BackendLogger
 from src.utils.primer3_parser.primer3_output_parser import P3outputParser
 from src.utils.config_parser.config_parser import parse_config
 
-from src.utils.unique_ids.create_uuid import create_uuid
 
 class CheckPrimer:
 
     def __init__(self, seq_id, forward, reverse, p_size_min = 15, p_size_opt = 21, p_size_max = 26, p_temp_min = 45, p_temp_opt = 55, p_temp_max = 75, p_gc_min = 40, p_gc_opt = 47, p_gc_max = 60, p_prod_size = '27401-27475 30-300 301-400 401-500 501-600 601-700 701-850 851-1000'   ):
-        self.seq_id = create_uuid(seq_id)
+        self.seq_id = seq_id
         self.fw = forward
         self.rv = reverse
         self.p_size_min = p_size_min

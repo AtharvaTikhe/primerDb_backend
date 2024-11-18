@@ -13,14 +13,16 @@ class GetSequence:
         self.flanks = int(flanks)
         self.lcoord = self.coord - self.flanks
         self.rcoord = self.coord + self.flanks
-        self.cache_path = parse_config('Pick_primers')['cache_path']
+        self.config = parse_config('Pick_primers')
+        self.cache_path = self.config['cache_path']
         self.logger = BackendLogger()
         self.seq_filename = f"{self.cache_path}/{self.chr}_{self.coord}.txt"
         # self.get_seq_from_api()
 
     def get_seq_from_api(self):
+        # url = "https://api.genome.ucsc.edu/getData/sequence?genome=hg38;chrom={self.chr};start={self.lcoord};end={self.rcoord}"
 
-        url = f"https://api.genome.ucsc.edu/getData/sequence?genome=hg38;chrom={self.chr};start={self.lcoord};end={self.rcoord}"
+        url = self.config['ucsc_url'].format(self.chr, self.lcoord, self.rcoord)
         self.logger.general_log(f"Requesting sequence using url {url}")
         resp = requests.get(url)
         self.logger.general_log(f"Response code {resp.status_code}")
