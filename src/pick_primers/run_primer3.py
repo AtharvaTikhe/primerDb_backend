@@ -15,7 +15,7 @@ from src.utils.config_parser.config_parser import parse_config
 from src.pick_primers.get_primer_seqs import GetPrimerDetails
 from src.pick_primers.get_sequence import GetSequence
 
-
+from src.utils.unique_ids.create_uuid import create_uuid
 
 
 class GenerateP3Input:
@@ -27,7 +27,7 @@ class GenerateP3Input:
         self.output_path = config['output_path']
         self.primer3_settings = config['primer3_settings']
 
-        self.seq_id = seq_id
+        self.seq_id = create_uuid(seq_id)
 
         if len(target.split(',')) == 2:
             self.target = target
@@ -114,7 +114,8 @@ class GenerateP3Input:
                 for key in primer_pairs.keys():
                     obj = UCSCScraper(self.seq_id, primer_pairs[key]['left_primer'], primer_pairs[key]['right_primer'])
                     db_obj = DbLookup(obj.get_coords(), self.seq_id)
-                    primer_pairs[key].update(db_obj.results[self.seq_id])
+                    results = db_obj.parse_results()
+                    primer_pairs[key].update(results[self.seq_id])
 
                 return primer_pairs, full_output
                 # print(json.loads(primer_seq.json))

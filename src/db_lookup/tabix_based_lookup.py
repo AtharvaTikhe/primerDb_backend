@@ -2,8 +2,7 @@ import json
 import subprocess
 from subprocess import SubprocessError
 
-# from src.db_lookup.ucsc_scraper import UCSCScraper
-# from src.pick_primers.run_primer3 import GenerateP3Input
+
 from src.db_lookup.parse_tabix_output import ParseResults
 from src.utils.config_parser.config_parser import parse_config
 
@@ -101,15 +100,13 @@ class DbLookup:
 
 
 
+# def get_res(chr, coord, flanks, seq_id, target, num_ret):
+#     obj = GenerateP3Input(chr, coord, flanks, seq_id, target, num_ret)
+#     primers = obj.run_primer3()
+#     for key, value in primers.items():
+#         obj = UCSCScraper(f'chr13_{int(key) + 1}', value['left_primer'], value['right_primer'])
+#         db_obj = DbLookup(obj.get_coords(), f'{int(key) + 1}')
 
-"""
-def get_res(chr, coord, flanks, seq_id, target, num_ret):
-    obj = GenerateP3Input(chr, coord, flanks, seq_id, target, num_ret)
-    primers = obj.run_primer3()
-    for key, value in primers.items():
-        obj = UCSCScraper(f'chr13_{int(key) + 1}', value['left_primer'], value['right_primer'])
-        db_obj = DbLookup(obj.get_coords(), f'{int(key) + 1}')
-"""
 
 # get_res('chr13', "20189511", '1000', 'CHR13x3', '900,200', '3')
 # get_res('chr1', "15529554", '1000', 'CHR1', '900,200', '10')

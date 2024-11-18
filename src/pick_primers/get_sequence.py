@@ -1,7 +1,7 @@
 import os
 import json
 import requests
-from src.pick_primers import cache_path, output_path
+# from src.pick_primers import cache_path, output_path
 from src.utils.backend_logger.logger import BackendLogger
 from src.utils.config_parser.config_parser import parse_config
 
