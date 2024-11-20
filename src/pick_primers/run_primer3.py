@@ -15,11 +15,29 @@ from src.utils.config_parser.config_parser import parse_config
 from src.pick_primers.get_primer_seqs import GetPrimerDetails
 from src.pick_primers.get_sequence import GetSequence
 
+def get_primer_pair_coords(variant_coord, primer_l_start, primer_l_end, flank, primer_r_end, primer_r_start):
+  # primer_r_start = primer_r_end - primer_r_len
+  primer_ls_coord = variant_coord - flank + primer_l_start
+  # primer_le_coord = variant_coord - flank + primer_l_end - 1
+  primer_le_coord = variant_coord - flank + primer_l_end
 
+  # primer_ls_coord, primer_le_coord
+
+  primer_rs_coord = variant_coord - flank + primer_r_end
+  primer_re_coord = variant_coord - flank + primer_r_start
+  # primer_re_coord = variant_coord - flank + primer_r_start - 1
+
+  # primer_rs_coord, primer_re_coord
+
+  return {'left_coords': {"start": primer_ls_coord, "end" : primer_le_coord}, 'right_coords': {"start": primer_re_coord, "end" : primer_rs_coord }}
 
 
 class GenerateP3Input:
     def __init__(self, chr, coord, flanks, seq_id, target, num_ret):
+        self.chr = chr
+        self.coord = coord
+        self.flanks = flanks
+
         config = parse_config('Pick_primers')
         
         self.primer3_bin = config['primer3_bin']
@@ -41,8 +59,10 @@ class GenerateP3Input:
         sequence = seq.get_seq_from_api()
         if sequence is not None:
             self.seq = json.loads(sequence)['dna'].strip()
+            self.api_error_flag = 0
         else:
-            raise Exception('No Sequence found for given co-ordinates and flanks')
+            # raise Exception('No Sequence found for given co-ordinates and flanks')
+            self.api_error_flag = 1
 
         self.p3_input_file = f"{self.cache_path}/{self.seq_id}.{self.num_ret}.input.txt"
         self.p3_output = f"{self.output_path}/{self.seq_id}_{self.num_ret}_out.txt"
@@ -73,6 +93,9 @@ class GenerateP3Input:
             self.logger.general_log(f"Input file exists : {self.p3_input_file} ... skipping generation ...")
 
     def run_primer3(self):
+        if self.api_error_flag == 1:
+            return json.dumps({'error': 'API Error: Sequence not returned'}), None
+
         self.generate_input()
         self.logger.general_log(f"Using primer3 bin : {self.primer3_bin}")
         try:
@@ -112,10 +135,19 @@ class GenerateP3Input:
                     primer_pairs[key].update(main[key])
 
                 for key in primer_pairs.keys():
+                    # Get db results
                     obj = UCSCScraper(self.seq_id, primer_pairs[key]['left_primer'], primer_pairs[key]['right_primer'])
                     db_obj = DbLookup(obj.get_coords(), self.seq_id)
                     results = db_obj.parse_results()
                     primer_pairs[key].update(results[self.seq_id])
+
+                    # Get genomic co-ordinates
+                    coords = get_primer_pair_coords(int(self.coord), int(primer_pairs[key]['left_pos']['start']), int(primer_pairs[key]['left_pos']['end']), int(self.flanks), int(primer_pairs[key]['right_pos']['end']), int(primer_pairs[key]['right_pos']['start']) )
+                    primer_pairs[key].update(coords)
+
+                # get_primer_pair_coords(15529554, 850, 870, 1000, 1243, 1224)
+
+
 
                 return primer_pairs, full_output
                 # print(json.loads(primer_seq.json))
