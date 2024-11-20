@@ -22,7 +22,8 @@ class GetSequence:
     def get_seq_from_api(self):
         # url = "https://api.genome.ucsc.edu/getData/sequence?genome=hg38;chrom={self.chr};start={self.lcoord};end={self.rcoord}"
 
-        url = self.config['ucsc_url'].format(self.chr, self.lcoord, self.rcoord)
+        url = self.config['ucsc_url'].format(self.chr, self.lcoord - 1, self.rcoord)
+        print(url)
         self.logger.general_log(f"Requesting sequence using url {url}")
         resp = requests.get(url)
         self.logger.general_log(f"Response code {resp.status_code}")
