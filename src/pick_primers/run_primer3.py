@@ -94,7 +94,7 @@ class GenerateP3Input:
 
     def run_primer3(self):
         if self.api_error_flag == 1:
-            return json.dumps({'error': 'API Error: Sequence not returned'}), None
+            return {'error': 'API Error: Sequence not returned'}, None
 
         self.generate_input()
         self.logger.general_log(f"Using primer3 bin : {self.primer3_bin}")
@@ -136,11 +136,13 @@ class GenerateP3Input:
 
                 for key in primer_pairs.keys():
                     # Get db results
-                    obj = UCSCScraper(self.seq_id, primer_pairs[key]['left_primer'], primer_pairs[key]['right_primer'])
-                    db_obj = DbLookup(obj.get_coords(), self.seq_id)
-                    results = db_obj.parse_results()
-                    primer_pairs[key].update(results[self.seq_id])
-
+                    try:
+                        obj = UCSCScraper(self.seq_id, primer_pairs[key]['left_primer'], primer_pairs[key]['right_primer'])
+                        db_obj = DbLookup(obj.get_coords(), self.seq_id)
+                        results = db_obj.parse_results()
+                        primer_pairs[key].update(results[self.seq_id])
+                    except Exception:
+                        return {"error": "DB lookup error; check variant location."}
                     # Get genomic co-ordinates
                     coords = get_primer_pair_coords(int(self.coord), int(primer_pairs[key]['left_pos']['start']), int(primer_pairs[key]['left_pos']['end']), int(self.flanks), int(primer_pairs[key]['right_pos']['end']), int(primer_pairs[key]['right_pos']['start']) )
                     primer_pairs[key].update(coords)
@@ -151,8 +153,9 @@ class GenerateP3Input:
 
                 return primer_pairs, full_output
                 # print(json.loads(primer_seq.json))
-        except CalledProcessError:
-            self.logger.general_log(f'primer3 failed for {self.p3_input_file}')
+        except Exception:
+            return {"error": "primer3 failed; check input parameters."}
+            # self.logger.general_log(f'primer3 failed for {self.p3_input_file}')
 
 if __name__=="__main__":
     chr = 'chr13'
