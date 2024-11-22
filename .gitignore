@@ -1,7 +1,11 @@
+src/db_lookup/subsample
 /home/atharvatikhe/primer_design/primerDB_backend/src/db_lookup/subsample
-src/*/__pycache__/*
-src/*/{output,cache}
-src/*/*.json
-src/*/*.txt
 
+src/*/output
+src/*/cache
+src/*/**/***/*.pyc
+src/utils/Db
+log
+*.json
+*.txt
 
