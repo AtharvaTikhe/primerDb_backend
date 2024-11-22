@@ -94,7 +94,8 @@ class GenerateP3Input:
 
     def run_primer3(self):
         if self.api_error_flag == 1:
-            return {'error': 'API Error: Sequence not returned'}, None
+            return {'error': 'API Error: Sequence not returned'}, 0
+
 
         self.generate_input()
         self.logger.general_log(f"Using primer3 bin : {self.primer3_bin}")
@@ -142,9 +143,16 @@ class GenerateP3Input:
                         results = db_obj.parse_results()
                         primer_pairs[key].update(results[self.seq_id])
                     except Exception:
-                        return {"error": "DB lookup error; check variant location."}
+                        return {"error": "DB lookup error; check variant location."}, 0
                     # Get genomic co-ordinates
+
                     coords = get_primer_pair_coords(int(self.coord), int(primer_pairs[key]['left_pos']['start']), int(primer_pairs[key]['left_pos']['end']), int(self.flanks), int(primer_pairs[key]['right_pos']['end']), int(primer_pairs[key]['right_pos']['start']) )
+
+                    # coords = get_primer_pair_coords(int(self.coord), int(primer_pairs[key]['left_pos']['start']),
+                    #                                 int(primer_pairs[key]['left_pos']['end']), int(self.flanks),
+                    #                                 int(primer_pairs[key]['right_pos']['end']),
+                    #                                 int(primer_pairs[key]['right_pos']['start']))
+
                     primer_pairs[key].update(coords)
 
                 # get_primer_pair_coords(15529554, 850, 870, 1000, 1243, 1224)

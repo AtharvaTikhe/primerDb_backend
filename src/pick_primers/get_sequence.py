@@ -24,7 +24,10 @@ class GetSequence:
 
         url = self.config['ucsc_url'].format(self.chr, self.lcoord - 1, self.rcoord)
         self.logger.general_log(f"Requesting sequence using url {url}")
-        resp = requests.get(url)
+        try:
+            resp = requests.get(url)
+        except ConnectionError as e:
+            return {"error": e}
         self.logger.general_log(f"Response code {resp.status_code}")
 
         if resp.status_code == 200:
