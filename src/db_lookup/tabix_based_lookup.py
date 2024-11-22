@@ -4,6 +4,8 @@ from subprocess import SubprocessError
 
 
 from src.db_lookup.parse_tabix_output import ParseResults
+
+
 from src.utils.config_parser.config_parser import parse_config
 
 
@@ -13,8 +15,15 @@ def run_tabix(db_dict, id):
         proc_f = subprocess.run(db_details['cmd'][0], shell=True, capture_output=True, text=True)
         proc_r = subprocess.run(db_details['cmd'][1], shell=True, capture_output=True, text=True)
         if proc_f.returncode == 0 and proc_r.returncode == 0:
-            db_dict[id][db_name]['forward'] = {'region': db_details['forward'], 'result': proc_f.stdout}
-            db_dict[id][db_name]['reverse'] = {'region': db_details['reverse'], 'result': proc_r.stdout}
+            if proc_f.stdout == '':
+                db_dict[id][db_name]['forward'] = {'region': db_details['forward'], 'result': 'N/A'}
+            else:
+                db_dict[id][db_name]['forward'] = {'region': db_details['forward'], 'result': proc_f.stdout}
+
+            if proc_r.stdout == '':
+                db_dict[id][db_name]['reverse'] = {'region': db_details['reverse'], 'result': 'N/A'}
+            else:
+                db_dict[id][db_name]['reverse'] = {'region': db_details['reverse'], 'result': proc_r.stdout}
         else:
             print(f'forward primer process returned : {db_details["cmd"][0]} {proc_f.returncode} {proc_f.stderr}')
             print(f'reverse primer process returned : {db_details["cmd"][1]} {proc_r.returncode} {proc_r.stderr}')
@@ -28,7 +37,7 @@ class DbLookup:
         config = parse_config('Db_lookup')
         self.tabix_bin = config['tabix_bin']
         self.db_root = config['db_root']
-
+        self.gnomad_root = config['gnomad_root']
         self.id = id
         for key, value in positions.items():
             self.chr = key
@@ -45,7 +54,7 @@ class DbLookup:
         self.medvar_db = f"{self.db_root}/{self.chr}.MedVarDb.tsv.gz"
         self.crdb = f"{self.db_root}/CRDB.{self.chr}.bed.gz"
         self.thousand_genomes = f"{self.db_root}/{self.chr}.1000G.tsv.gz"
-        self.gnomad = f"{self.db_root}/gnomad/{self.chr}.gnomad.gr38.vcf.gz"
+        self.gnomad = f"{self.gnomad_root}/{self.chr}.gnomad.gr38.vcf.gz"
 
         self.results = run_tabix(self.command_generator(), self.id)
 
@@ -99,15 +108,20 @@ class DbLookup:
         return parser.parse_results()
 
 
+if __name__ == '__main__':
+    from src.pick_primers.run_primer3 import GenerateP3Input
+    from src.db_lookup.ucsc_scraper import UCSCScraper
 
-# def get_res(chr, coord, flanks, seq_id, target, num_ret):
-#     obj = GenerateP3Input(chr, coord, flanks, seq_id, target, num_ret)
-#     primers = obj.run_primer3()
-#     for key, value in primers.items():
-#         obj = UCSCScraper(f'chr13_{int(key) + 1}', value['left_primer'], value['right_primer'])
-#         db_obj = DbLookup(obj.get_coords(), f'{int(key) + 1}')
+    def get_res(chr, coord, flanks, seq_id, target, num_ret):
+        obj = GenerateP3Input(chr, coord, flanks, seq_id, target, num_ret)
+        primers, full_output = obj.run_primer3()
+
+        for key, value in primers.items():
+            obj = UCSCScraper(f'chr13_{int(key) + 1}', value['left_primer'], value['right_primer'])
+            db_obj = DbLookup(obj.get_coords(), f'{int(key) + 1}')
+            print(db_obj.parse_results())
 
 
-# get_res('chr13', "20189511", '1000', 'CHR13x3', '900,200', '3')
-# get_res('chr1', "15529554", '1000', 'CHR1', '900,200', '10')
-# get_res('chr10', "70600902", '1000', 'CHR10', '900,200', '10')
+    get_res('chr13', "20189511", '1000', 'CHR13x1', '900,200', '1')
+    # get_res('chr1', "15529554", '1000', 'CHR1', '900,200', '1')
+    # get_res('chr10', "70600902", '1000', 'CHR10', '900,200', '10')
