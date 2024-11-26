@@ -1,4 +1,5 @@
 import json
+import os.path
 import subprocess
 from subprocess import SubprocessError
 
@@ -51,24 +52,18 @@ class DbLookup:
         }
 
         # define database paths
-        self.medvar_db = f"{self.db_root}/{self.chr}.MedVarDb.tsv.gz"
-        self.crdb = f"{self.db_root}/CRDB.{self.chr}.bed.gz"
-        self.thousand_genomes = f"{self.db_root}/{self.chr}.1000G.tsv.gz"
-        self.gnomad = f"{self.gnomad_root}/{self.chr}.gnomad.gr38.vcf.gz"
+        self.medvar_db = os.path.join(self.db_root, f"{self.chr}.MedVarDb.tsv.gz")
+        self.thousand_genomes = os.path.join(self.db_root, f"{self.chr}.1000G.tsv.gz")
+        self.gnomad = os.path.join(self.gnomad_root, f"{self.chr}.gnomad.gr38.vcf.gz")
+
+        crdb_path = os.path.join(self.db_root, f"CRDB.{self.chr}.bed.gz")
+        if os.path.exists(crdb_path):
+            self.crdb = f"{self.db_root}/CRDB.{self.chr}.bed.gz"
+        else:
+            self.crdb = os.path.join(self.db_root, "CRDB.bed.gz")
 
         self.results = run_tabix(self.command_generator(), self.id)
 
-        # with open(f'{self.chr}_{self.id}_test_results.txt', 'w') as f:
-        #     for db, result in results.items():
-        #         f.write(f'db - {db}\n')
-        #         f.write(f'forward - {self.forward_primer_range} \n')
-        #         f.write(result['forward']['result'])
-        #         f.write(f'reverse - {self.reverse_primer_range} \n')
-        #         f.write(result['reverse']['result'])
-        #         f.write('-' * 100)
-        #         f.write('\n')
-        #     print(f'{self.chr}_{self.id}_test_results.txt done')
-        #     f.close()
 
     def command_generator(self):
         db_dict = {
