@@ -16,7 +16,7 @@ class GetSequence:
         self.config = parse_config('Pick_primers')
         self.cache_path = self.config['cache_path']
         self.logger = BackendLogger()
-        self.seq_filename = f"{self.cache_path}/{self.chr}_{self.coord}.txt"
+        self.seq_filename = os.path.join(self.cache_path, f"{self.chr}_{self.coord}.txt")
         # self.get_seq_from_api()
 
     def get_seq_from_api(self):

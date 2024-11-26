@@ -64,8 +64,8 @@ class GenerateP3Input:
             # raise Exception('No Sequence found for given co-ordinates and flanks')
             self.api_error_flag = 1
 
-        self.p3_input_file = f"{self.cache_path}/{self.seq_id}.{self.num_ret}.input.txt"
-        self.p3_output = f"{self.output_path}/{self.seq_id}_{self.num_ret}_out.txt"
+        self.p3_input_file = os.path.join(self.cache_path, f"{self.seq_id}.{self.num_ret}.input.txt")
+        self.p3_output = os.path.join(self.output_path, f"{self.seq_id}.{self.num_ret}.out.txt")
         self.logger = BackendLogger()
 
 
@@ -162,7 +162,7 @@ class GenerateP3Input:
                 return primer_pairs, full_output
                 # print(json.loads(primer_seq.json))
         except Exception:
-            return {"error": "primer3 failed; check input parameters."}
+            return {"error": "primer3 failed; check input parameters."}, 0
             # self.logger.general_log(f'primer3 failed for {self.p3_input_file}')
 
 if __name__=="__main__":

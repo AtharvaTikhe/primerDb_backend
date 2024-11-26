@@ -1,6 +1,8 @@
 import re
 import sys
 from collections import defaultdict
+from pathlib import Path
+
 import pandas as pd
 
 from src.utils.backend_logger.logger import BackendLogger
@@ -164,12 +166,12 @@ class GetPrimerDetails(BackendLogger):
         except ValueError:
             merge = {'status': 'No primers found'}
         if write_json is True:
-            merge.to_json(f"{self.p3_file.split('.')[0]}_primers.json")
+            merge.to_json(f"{Path(self.p3_file).stem}_primers.json")
         return merge.to_json()
 
     def get_primer_details(self, write_json = False):
 
-        super().general_log(f"writing JSON {self.p3_file.split('.')[0]}_primers.json")
+        super().general_log(f"writing JSON {Path(self.p3_file).stem}_primers.json")
 
         return self.__merge_primer_dicts(self.__sequence_dict, self.__position_dict, write_json)
 
