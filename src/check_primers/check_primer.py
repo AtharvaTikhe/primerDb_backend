@@ -1,3 +1,4 @@
+import configparser
 import json
 import re
 import os.path
@@ -8,6 +9,7 @@ from subprocess import CalledProcessError
 from src.db_lookup.tabix_based_lookup import DbLookup
 from src.db_lookup.ucsc_scraper import UCSCScraper
 from src.utils.backend_logger.logger import BackendLogger
+from src.utils.errors import InvalidConfigError
 from src.utils.primer3_parser.primer3_output_parser import P3outputParser
 from src.utils.config_parser.config_parser import parse_config
 
@@ -29,15 +31,19 @@ class CheckPrimer:
         self.p_gc_max = p_gc_max
         self.p_prod_size = p_prod_size.strip()
 
-        self.template = 'src/check_primers/template.txt'
+        self.template = os.path.join('src', 'check_primers', 'template.txt')
 
-        config = parse_config('Check_primers')
+        try:
+            config = parse_config('Check_primers')
+            self.cache_path = config['cache_path']
+            self.primer3_bin = config['primer3_bin']
+            self.output_path = config['output_path']
+            self.out = os.path.join(self.cache_path, f"{self.seq_id}.input.txt")
+        except configparser.NoSectionError:
+            raise InvalidConfigError()
 
-        self.cache_path = config['cache_path']
-        self.primer3_bin = config['primer3_bin']
-        self.output_path = config['output_path']
 
-        self.out = f'{self.cache_path}/{self.seq_id}.input.txt'
+
         self.logger = BackendLogger()
 
         
