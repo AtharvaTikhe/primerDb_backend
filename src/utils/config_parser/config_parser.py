@@ -4,6 +4,7 @@ def parse_config(category):
     config.read('./src/config.ini')
     config_values = {}
 
+
     try:
         if category == 'Pick_primers':
             config_values['cache_path'] = config.get(category, 'cache_path')
@@ -21,6 +22,10 @@ def parse_config(category):
             config_values['cache_path'] = config.get(category, 'cache_path')
             config_values['output_path'] = config.get(category, 'output_path')
             config_values['primer3_bin'] = config.get(category, 'primer3_bin')
+            config_values['template_file'] = config.get(category, 'template_file')
+        if category == 'primerDb':
+            config_values['db_url'] = config.get(category, 'db_url')
+
     except configparser.NoOptionError:
         print(category)
 

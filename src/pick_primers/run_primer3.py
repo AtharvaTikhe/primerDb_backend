@@ -46,23 +46,14 @@ class GenerateP3Input:
         self.primer3_settings = config['primer3_settings']
 
         self.seq_id = seq_id
+        self.seq = ""
 
         if len(target.split(',')) == 2:
             self.target = target
         else:
-            # assert "Target should have two comma separated values example: 900,200"
             raise ValueError
 
         self.num_ret = num_ret
-
-        seq = GetSequence(chr, coord, flanks)
-        sequence = seq.get_seq_from_api()
-        if sequence is not None:
-            self.seq = json.loads(sequence)['dna'].strip()
-            self.api_error_flag = 0
-        else:
-            # raise Exception('No Sequence found for given co-ordinates and flanks')
-            self.api_error_flag = 1
 
         self.p3_input_file = os.path.join(self.output_path, f"{self.seq_id}.{self.num_ret}.input.txt")
 
@@ -106,8 +97,14 @@ class GenerateP3Input:
 
             return db_primer_pairs, cached_full_output
 
-        if self.api_error_flag == 1:
+        seq = GetSequence(self.chr, self.coord, self.flanks)
+        sequence = seq.get_seq_from_api()
+        if sequence is not None:
+            self.seq = json.loads(sequence)['dna'].strip()
+        else:
+            # raise Exception('No Sequence found for given co-ordinates and flanks')
             return {'error': 'API Error: Sequence not returned'}, 0
+
 
         self.generate_input()
         self.logger.general_log(f"Using primer3 bin : {self.primer3_bin}")

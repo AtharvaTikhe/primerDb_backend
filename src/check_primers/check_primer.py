@@ -38,6 +38,7 @@ class CheckPrimer:
             self.cache_path = config['cache_path']
             self.primer3_bin = config['primer3_bin']
             self.output_path = config['output_path']
+            self.template = config['template_file']
             self.out = os.path.join(self.cache_path, f"{self.seq_id}.input.txt")
         except configparser.NoSectionError:
             raise InvalidConfigError()

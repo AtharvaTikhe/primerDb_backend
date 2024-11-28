@@ -1,7 +1,10 @@
 from sqlalchemy import create_engine, text, Column, Integer, String, ForeignKey, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import json
+
+from src.utils.config_parser.config_parser import parse_config
+
+
 Base = declarative_base()
 
 class InputParameters(Base):
@@ -57,7 +60,10 @@ class PrimerPairs(Base):
 
 
 def get_session():
-    engine = create_engine("sqlite:///src/utils/Db/primerDB.db")
+    config = parse_config('primerDb')
+    db_url = config['db_url']
+
+    engine = create_engine(db_url)
 
     Base.metadata.create_all(engine)
 
