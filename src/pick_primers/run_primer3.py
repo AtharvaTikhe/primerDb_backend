@@ -2,11 +2,11 @@ from collections import defaultdict
 import json
 import os.path
 import subprocess
-from subprocess import CalledProcessError
 
 
 from src.db_lookup.tabix_based_lookup import DbLookup
 from src.db_lookup.ucsc_scraper import UCSCScraper
+from src.utils.Db.dbInteract import CheckEntry, get_hash
 from src.utils.primer3_parser.primer3_output_parser import P3outputParser
 from src.utils.backend_logger.logger import BackendLogger
 from src.utils.config_parser.config_parser import parse_config
@@ -64,8 +64,13 @@ class GenerateP3Input:
             # raise Exception('No Sequence found for given co-ordinates and flanks')
             self.api_error_flag = 1
 
-        self.p3_input_file = os.path.join(self.cache_path, f"{self.seq_id}.{self.num_ret}.input.txt")
-        self.p3_output = os.path.join(self.output_path, f"{self.seq_id}.{self.num_ret}.out.txt")
+        self.p3_input_file = os.path.join(self.output_path, f"{self.seq_id}.{self.num_ret}.input.txt")
+
+        # input_string = self.chr + self.coord + self.flanks + self.seq_id + self.target + self.num_ret
+        # hash = get_hash(input_string)
+        self.db_obj = CheckEntry(self.chr, self.coord, self.flanks, self.seq_id, self.target, self.num_ret)
+        self.p3_output = os.path.join(self.output_path, f"{self.seq_id}.{self.db_obj.input_hash[-6:]}.out.txt")
+
         self.logger = BackendLogger()
 
 
@@ -82,8 +87,6 @@ class GenerateP3Input:
 
         input = [f"SEQUENCE_ID={self.seq_id}", f"SEQUENCE_TEMPLATE={self.seq}", f"SEQUENCE_TARGET={self.target}", f'PRIMER_PICK_LEFT_PRIMER=1', 'PRIMER_PICK_RIGHT_PRIMER=1', "PRIMER_EXPLAIN_FLAG=1", f"PRIMER_NUM_RETURN={self.num_ret}", "="]
 
-
-
         if not os.path.exists(self.p3_input_file):
             with open(self.p3_input_file, 'w') as f:
                 f.writelines([item + '\n' for item in input])
@@ -93,18 +96,27 @@ class GenerateP3Input:
             self.logger.general_log(f"Input file exists : {self.p3_input_file} ... skipping generation ...")
 
     def run_primer3(self):
+        if self.db_obj.check_entry() == 1:
+            db_primer_pairs = self.db_obj.get_primer_pairs()
+            output_parser = P3outputParser(f"{self.p3_output}")
+            cached_full_output = json.loads(output_parser.parse_file())
+
+            self.logger.general_log('returning entry from database')
+            print('returning entry from database')
+
+            return db_primer_pairs, cached_full_output
+
         if self.api_error_flag == 1:
             return {'error': 'API Error: Sequence not returned'}, 0
-
 
         self.generate_input()
         self.logger.general_log(f"Using primer3 bin : {self.primer3_bin}")
         try:
-
-            proc = subprocess.run([f'{self.primer3_bin} --p3_settings_file="{self.primer3_settings}" --output={self.p3_output} --error="{self.cache_path}/{self.seq_id}_err.txt" {self.p3_input_file} '], shell=True, capture_output=True, text=True)
+            proc = subprocess.run([f'{self.primer3_bin} --p3_settings_file="{self.primer3_settings}" --output={self.p3_output} --error="{self.output_path}/{self.seq_id}_err.txt" {self.p3_input_file} '], shell=True, capture_output=True, text=True)
 
             if proc.stderr != '' or proc.returncode != 0:
                 self.logger.general_log(f"primer3 returned {proc.returncode} : {proc.stderr}")
+                return {"error": f"primer3 return {proc.returncode} : {proc.stderr}"}, 0
             elif proc.returncode == 0:
                 self.logger.general_log(f"primer3 ran successfully for {self.p3_input_file}")
 
@@ -112,12 +124,12 @@ class GenerateP3Input:
                 primer_seq = GetPrimerDetails(f"{self.p3_output}", True)
 
                 # parse entire output and store as JSON
-                parsed_out = P3outputParser(f"{self.p3_output}")
+                output_parser = P3outputParser(f"{self.p3_output}")
 
-                with open(f"{self.output_path}/{self.seq_id}_p3_out.json", 'w', encoding='utf-8') as f:
-                    json.dump(json.loads(parsed_out.parse_file()), f, ensure_ascii=False, indent=4)
+                # with open(f"{self.output_path}/{self.seq_id}_p3_out.json", 'w', encoding='utf-8') as f:
+                #     json.dump(json.loads(output_parser.parse_file()), f, ensure_ascii=False, indent=4)
 
-                full_output = json.loads(parsed_out.parse_file())
+                full_output = json.loads(output_parser.parse_file())
                 primer_pairs = json.loads(primer_seq.json)
 
                 main = defaultdict(dict)
@@ -144,26 +156,19 @@ class GenerateP3Input:
                         primer_pairs[key].update(results[self.seq_id])
                     except Exception:
                         return {"error": "DB lookup error; check variant location."}, 0
+
                     # Get genomic co-ordinates
-
                     coords = get_primer_pair_coords(int(self.coord), int(primer_pairs[key]['left_pos']['start']), int(primer_pairs[key]['left_pos']['end']), int(self.flanks), int(primer_pairs[key]['right_pos']['end']), int(primer_pairs[key]['right_pos']['start']) )
-
-                    # coords = get_primer_pair_coords(int(self.coord), int(primer_pairs[key]['left_pos']['start']),
-                    #                                 int(primer_pairs[key]['left_pos']['end']), int(self.flanks),
-                    #                                 int(primer_pairs[key]['right_pos']['end']),
-                    #                                 int(primer_pairs[key]['right_pos']['start']))
-
                     primer_pairs[key].update(coords)
 
-                # get_primer_pair_coords(15529554, 850, 870, 1000, 1243, 1224)
-
-
-
+                self.db_obj.add_entry(primer_pairs)
+                print('entry added')
                 return primer_pairs, full_output
-                # print(json.loads(primer_seq.json))
-        except Exception:
+        except Exception as e:
+            raise(e)
+            self.logger.general_log(f'primer3 failed for {self.p3_input_file}')
+            # raise(e)
             return {"error": "primer3 failed; check input parameters."}, 0
-            # self.logger.general_log(f'primer3 failed for {self.p3_input_file}')
 
 if __name__=="__main__":
     chr = 'chr13'
