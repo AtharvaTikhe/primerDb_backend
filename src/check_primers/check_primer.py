@@ -13,6 +13,8 @@ from src.utils.errors import InvalidConfigError
 from src.utils.primer3_parser.primer3_output_parser import P3outputParser
 from src.utils.config_parser.config_parser import parse_config
 
+from src.utils.Db.dbInteract import get_hash
+
 
 class CheckPrimer:
 
@@ -30,8 +32,8 @@ class CheckPrimer:
         self.p_gc_opt = p_gc_opt
         self.p_gc_max = p_gc_max
         self.p_prod_size = p_prod_size.strip()
-
-        self.template = os.path.join('src', 'check_primers', 'template.txt')
+        self.input_hash = get_hash(self.seq_id + self.fw + self.rv )
+        self.short_hash = self.input_hash[-6:]
 
         try:
             config = parse_config('Check_primers')
@@ -39,7 +41,7 @@ class CheckPrimer:
             self.primer3_bin = config['primer3_bin']
             self.output_path = config['output_path']
             self.template = config['template_file']
-            self.out = os.path.join(self.cache_path, f"{self.seq_id}.input.txt")
+            self.out = os.path.join(self.cache_path, f"{self.seq_id}.{self.short_hash}.input.txt")
         except configparser.NoSectionError:
             raise InvalidConfigError()
 
@@ -73,8 +75,7 @@ class CheckPrimer:
         # Check cache if file exists
         if os.path.exists(self.out):
             self.logger.general_log(f'{self.out} already exists...skipping creation')
-
-            print("file exists already; load results?")# future caching method
+            # print("file exists already; load results?")# future caching method
             pass
         else:
             with open(self.out, 'w') as f:
@@ -93,21 +94,23 @@ class CheckPrimer:
             elif proc.returncode == 0:
                 self.logger.general_log(f"primer3 ran successfully for {self.out}")
 
-            with open(f'{self.output_path}/{self.seq_id}.out.txt', 'w') as f:
+            with open(f'{self.output_path}/{self.seq_id}.{self.short_hash}.out.txt', 'w') as f:
                 f.writelines(proc.stdout)
                 f.close()
 
             if os.path.exists(f"{self.seq_id}.for") and os.path.exists(f"{self.seq_id}.rev"):
-                os.rename(f"{self.seq_id}.for", f"{self.output_path}/{self.seq_id}.for")
-                os.rename(f"{self.seq_id}.rev", f"{self.output_path}/{self.seq_id}.rev")
-                self._for_rev_files.append(open(f'{self.output_path}/{self.seq_id}.for', 'r'))
-                self._for_rev_files.append(open(f'{self.output_path}/{self.seq_id}.rev', 'r'))
+                os.rename(f"{self.seq_id}.for", f"{self.output_path}/{self.seq_id}.{self.short_hash}.for")
+                os.rename(f"{self.seq_id}.rev", f"{self.output_path}/{self.seq_id}.{self.short_hash}.rev")
+                self._for_rev_files.append(open(f'{self.output_path}/{self.seq_id}.{self.short_hash}.for', 'r'))
+                self._for_rev_files.append(open(f'{self.output_path}/{self.seq_id}.{self.short_hash}.rev', 'r'))
             else:
                 self.logger.general_log(f"NO PRIMERS FOUND! {self.seq_id}")
                 os.remove(self.out)
 
         except CalledProcessError as e:
             self.logger.general_log(f"ERROR RUNNING PRIMER3 : {e}")
+            return {"error": f"ERROR RUNNING PRIMER3 : {e}"}
+
 
         return self.parse_p3_output()
 
@@ -115,7 +118,18 @@ class CheckPrimer:
     def parse_p3_output(self):
         fw_content = self._for_rev_files[0].readlines()
         rv_content = self._for_rev_files[1].readlines()
+        if len(fw_content) != 4:
+            return {'error': f'Unacceptable forward primer sequence {self.fw}'}
+        elif len(rv_content) != 4:
+            return {'error': f'Unaccaptable reverse primer sequence {self.rv}'}
 
+
+        """
+        REGEX : 
+        start with digit between 0-9 followed by sequence. Subsequent value parsing.
+        Check *.for.txt for reference.
+        
+        """
         regex = r"([0-9])\s([ATGC]+)\s*(\d+)\s*(\d+)\s*(\d+)\s*(\d+.\d+)\s*(\d+.\d+)\s*(\d+.\d+)\s*(\d+.\d+)\s*(\d+.\d+)\s*(\d+.\d+)"
 
         export_dict = defaultdict(dict)
@@ -146,9 +160,9 @@ class CheckPrimer:
             export_dict['reverse']['hairpin'] = groups[9]
             export_dict['reverse']['quality'] = groups[10]
 
-        p3_out = P3outputParser(f'{self.output_path}/{self.seq_id}.out.txt')
+        p3_out = P3outputParser(f'{self.output_path}/{self.seq_id}.{self.short_hash}.out.txt')
 
-        with open(f'{self.output_path}/{self.seq_id}.json', 'w', encoding='utf-8') as f:
+        with open(f'{self.output_path}/{self.seq_id}.{self.short_hash}.json', 'w', encoding='utf-8') as f:
             json.dump(json.loads(p3_out.parse_file()), f, ensure_ascii=False, indent=4)
             f.close()
 
@@ -156,9 +170,11 @@ class CheckPrimer:
         obj = UCSCScraper(self.seq_id, export_dict['forward']['seq'], export_dict['reverse']['seq'])
         db_obj = DbLookup(obj.get_coords(), self.seq_id)
         results = db_obj.parse_results()
-        export_dict.update(results[self.seq_id])
-
-        return json.dumps(export_dict)
+        if 'error' in results.keys():
+            return results
+        else:
+            export_dict.update(results[self.seq_id])
+            return json.dumps(export_dict)
 
 
 """
