@@ -6,10 +6,11 @@ For Check primer functionality - pass sequence ID and sequences.
 The returned string has to be loaded as JSON. The JSON contains DB data as well.
 
 """
-# from src.check_primers.check_primer import CheckPrimer
+from src.check_primers.check_primer import CheckPrimer
 # obj = CheckPrimer("TEST1", "CACACGTTCTTGCAGCCTG", "TCCTGTGTTGTGTGCATTCG")
-# out = json.loads(obj.run_primer3())
-# print(out)
+obj = CheckPrimer("TEST1", "CACACGTTCTTGCAGA", "TCCTGTGTTGTGTGCATTCG")
+out = obj.run_primer3()
+print(out)
 
 """
 
@@ -18,12 +19,12 @@ For Pick primer functionality -
 primer_pairs JSON now has database results as well.
 
 """
-from src.pick_primers.run_primer3 import GenerateP3Input
-
-obj = GenerateP3Input('chr1', "15529554", '1000', 'CHR1', '900,200', '1')
-
-primer_pairs, full_output = obj.run_primer3()
-print(primer_pairs)
+# from src.pick_primers.run_primer3 import GenerateP3Input
+#
+# obj = GenerateP3Input('chr1', "15529554", '1000', 'CHR1', '900,200', '2')
+#
+# primer_pairs, full_output = obj.run_primer3()
+# print(primer_pairs)
 
 # from src.utils.Db.dbInteract import CheckEntry
 # db_entry = CheckEntry('chr1', "15529554", '1000', 'CHR1', '900,200', '2', primer_pairs)
