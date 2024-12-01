@@ -50,6 +50,8 @@ class UCSCScraper:
                 matches = re.finditer(regex, coords_string, re.MULTILINE)
 
                 groups = [[group for group in match.groups()] for _, match in enumerate(matches)]
+                if len(groups) == 0:
+                    return {'error': 'No matches found on UCSC for given sequences'}
                 groups = groups[0]
                 export_dict = {
                     groups[0]: {"prod_start": groups[1], "prod_end": groups[2], "forward_primer": f"{groups[1]}-{int(groups[1]) + len(self.forward)}", "reverse_primer": f"{int(groups[2])-len(self.reverse)}-{groups[2]}"}}

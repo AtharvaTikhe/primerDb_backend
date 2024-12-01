@@ -40,7 +40,14 @@ class DbLookup:
         self.db_root = config['db_root']
         self.gnomad_root = config['gnomad_root']
         self.id = id
-        for key, value in positions.items():
+        self.positions = positions
+        # self.generate_results()
+
+    def generate_results(self):
+        for key, value in self.positions.items():
+            if key == 'error':
+                return self.positions
+
             self.chr = key
             self.forward_primer_range = value['forward_primer']
             self.reverse_primer_range = value['reverse_primer']
@@ -62,8 +69,8 @@ class DbLookup:
         else:
             self.crdb = os.path.join(self.db_root, "CRDB.bed.gz")
 
-        self.results = run_tabix(self.command_generator(), self.id)
-
+        results = run_tabix(self.command_generator(), self.id)
+        return results
 
     def command_generator(self):
         db_dict = {
@@ -99,8 +106,12 @@ class DbLookup:
         return self.pre_db_result
 
     def parse_results(self):
-        parser = ParseResults(self.results, self.id)
-        return parser.parse_results()
+        results = self.generate_results()
+        if 'error' in results.keys():
+            return results
+        else:
+            parser = ParseResults(results, self.id)
+            return parser.parse_results()
 
 
 if __name__ == '__main__':
