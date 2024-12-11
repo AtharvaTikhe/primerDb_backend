@@ -107,7 +107,8 @@ class ParseResults:
         regex = r"^(chr[1-9,XYM]+)\t(\d+)\t(.+)\t(.*)"
         # regex = r"^(chr[1-9,XYM]+)\s+(\d+)\s+([\w.]+)\t(\w+)\t(\w+)\t([\w.]+)\t([\w.]+)\s+(.+;(AF=[\d.]+))"
         # regex = r"^(chr[1-9,XYM]+)   (\d+)        ([\w.]+)       (\w+)       (\w+)       ([\w.]+)       ([\w.]+)\s+(.+;(AF=[\d.]+))"
-        regex = r"^(chr[1-9,XYM]+)\t(\d+)\t+([\w.]+)\t+(\w+)\t+(\w+)\t+([\w.]+)\t+([\w.]+)\s+(.+;(AF=[\d.]+))"
+        # regex = r"^(chr[1-9,XYM]+)\t(\d+)\t+([\w.]+)\t+(\w+)\t+(\w+)\t+([\w.]+)\t+([\w.]+)\s+(.+;(AF=[\d.]+))"
+        regex = r"^(chr[1-9,XYM]+)\t(\d+)\t+([\w.]+)\t+(\w+)\t+(\w+)\t+([\w.]+)\t+([\w.]+)\s+(.+;(AF=[\d.e-]+))"
         self.result_dict[self.id]['gnomad']['forward']['result'] = run_regex_gnomad(regex, self.result_dict[self.id]['gnomad']['forward']['result'])
         self.result_dict[self.id]['gnomad']['reverse']['result'] = run_regex_gnomad(regex,self.result_dict[self.id]['gnomad']['reverse']['result'])
 
